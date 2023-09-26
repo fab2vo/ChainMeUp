@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "615252486489",
+    "project_id": "chainmeupcheck",
+    "storage_bucket": "chainmeupcheck.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615252486489:android:a29a357f6b82c86fce0448",
+        "android_client_info": {
+          "package_name": "com.example.secondflutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1N5HKyb3fNyHRc57jI9SSQadVYNpxzkg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
