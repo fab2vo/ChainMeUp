@@ -25,9 +25,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     checkin();
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Chain me Up Check',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade900),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Chain me Up check'),
@@ -44,6 +44,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 Future<void> checkin() async {
+  /**FirebaseAuth.instance.userChanges().listen((User? user) {
+      if (user == null) {print('User is currently signed out!');
+      } else {print('User is signed in!');}
+      }); **/
   try {
     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: 'fabdevaux@gmail.com',
@@ -64,45 +68,50 @@ class _MyHomePageState extends State<MyHomePage> {
 
  void _updateCardState(int num){ // add card if not there and return true, or remove and return false
     setState(() {
-      if (_cardSet.contains(num)) {
-        _cardSet.remove(num);
-      } else {
-        _cardSet.add(num);
-        }
+      if (num!=99) {
+        if (_cardSet.contains(num)) {_cardSet.remove(num);}
+        else {_cardSet.add(num);}
+      }
     });
   }
 void _checkCardSet () {
     String stringToCheck="";
-    _results="";
     List<int> toSort=List<int>.from(_cardSet);
     toSort.sort();
     for(int i in toSort){
       stringToCheck += "-${i.toString().padLeft(2, '0')}";
     }
     stringToCheck=stringToCheck.substring(1);
-    /**FirebaseAuth.instance.userChanges().listen((User? user) {
-      if (user == null) {print('User is currently signed out!');
-      } else {print('User is signed in!');}
-    }); **/
+    _results=" Checking $stringToCheck ...";
     _readIt(stringToCheck);
+    _updateCardState(99);
   }
 
-Future<void> _readIt(String sToCheck)async {
+ void _initCardSet () {
+    _cardSet={};
+    _updateCardState(99);
+ }
+
+Future<void> _readIt(String sToCheck) async {
     var db = FirebaseFirestore.instance;
+    print(sToCheck);
     db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).get().then(
           (querySnapshot) {
         if (querySnapshot.docs.isNotEmpty){
-          _results="Cost    GHG    H20   Land  Protest\n";
-          for (var docSnapshot in querySnapshot.docs) {
-            _results+=docSnapshot.data()["Cost"].toString().padRight(9," ");
-            _results+=docSnapshot.data()["GHG"].toString().padRight(9," ");
-            _results+=docSnapshot.data()["H20"].toString().padRight(9," ");
-            _results+=docSnapshot.data()["Land"].toString().padRight(9," ");
-            _results+=docSnapshot.data()["Protest"].toString().padRight(9," ");
-            _results+="\n";
-            _updateCardState(99);
+          _results="Cost    GHG    H20   Land  Protest          \n";
+          List<ChainResult> _resultList=[];
+          ChainResult _chRes;
+          for (var docSnapshot in querySnapshot.docs){
+            _chRes=ChainResult(sToCheck,docSnapshot.data()["Cost"] as double,
+                docSnapshot.data()["GHG"] as double,
+                docSnapshot.data()["H2O"] as double,
+                docSnapshot.data()["Land"] as double,
+                docSnapshot.data()["Protest"] as double);
+            _resultList.add(_chRes);
+            _results += _chRes.affi();
           }
-        } else {_results="No such chain"; _updateCardState(99);}
+        } else {_results="No such chain"; }
+        _updateCardState(99);
       },
       onError: (e) => print("Error completing: $e"),
     );
@@ -125,8 +134,8 @@ Future<void>  _pickFile() async {
     //print(csvTable.length);
     // add to firestore
     var db = FirebaseFirestore.instance;
-    var imin=51938; // ok 51571(delta de 2025)
-    var imax=55000; // n'a pas fonctionne
+    var imin=100000; // ok
+    var imax=105000; //
     for (var i = imin; i < imax; i++){
       db.collection("Chains").add(ChainResult.short(csvTable[i]).toMap());
       //print(ChainResult.short(csvTable[i]).toMap());
@@ -143,20 +152,33 @@ Future<void>  _pickFile() async {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-             //KeyBoard(fu: _updateCardState, cardSet: _cardSet),
-            GridCard(fu: _updateCardState, cardSet: _cardSet),
-            ElevatedButton(
-                onPressed: () {
-                  _checkCardSet();
-                },
-                style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
+            //GridCard(fu: _updateCardState, cardSet: _cardSet),
+            KeyBoard(fu: _updateCardState, cardSet: _cardSet),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: () => _checkCardSet(),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
-                child: const Text('Submit')
+                  child: const Text('Submit')
+                  ),
+                  ElevatedButton(
+                      onPressed: () => _initCardSet(),
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8))),
+                      child: const Text('Clear')
+                  ),
+                  ]
             ),
-            Text(_results),
+            Container(
+                margin:EdgeInsets.only(top:15.0),
+                child:Text(_results)
+            ),
             ElevatedButton(
                 onPressed: () {
                   _fillDB();
@@ -182,22 +204,29 @@ class CardButton extends StatelessWidget {
   final Function fu; // function to add the card to the card set, return true if the card is already in it
   @override
   Widget build(BuildContext context) {
+    if ((carddecknumber+1)>(cardDeck.length)) return Container();
     return Container(
-         child: ElevatedButton(
+        margin: const EdgeInsets.all(2),
+        child : ConstrainedBox(
+          constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+          child:ElevatedButton(
               onPressed: () {fu(cardDeck[carddecknumber].num);},
               style: ElevatedButton.styleFrom(
-                textStyle: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold),
-                  backgroundColor: cardDeck[carddecknumber].color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: (isPressed) ? Colors.black : cardDeck[carddecknumber].color ,width: 2)
+                  minimumSize: Size.zero, // Set this
+                  padding: EdgeInsets.zero, // and this
+                  textStyle: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+                    backgroundColor: cardDeck[carddecknumber].color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: (isPressed) ? Colors.grey.shade500 : cardDeck[carddecknumber].color ,width: 5)
                 )
               ),
                 child: Text('${cardDeck[carddecknumber].num}', style: const TextStyle(color: Colors.white))
           )
-        )
+      )
+    )
     ;
   }
 }
@@ -208,34 +237,24 @@ class KeyBoard extends StatelessWidget {
   final Function fu;
   @override
   Widget build(BuildContext context) {
-    return Column(children: <Widget>[
+    return Container(
+      margin:EdgeInsets.only(top:20.0, bottom:15.0),
+      child : Column(
+        children: <Widget>[
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 0),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 7),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 14),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 21),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 28),
-    ]);
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 10),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 20),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 30),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 40),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 50),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 60),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 70),
+        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 80),
+        ]
+      )
+    )
+    ;
   }
-}
-
-class GridCard extends StatelessWidget{
-  const GridCard({super.key, required this.fu, required this.cardSet});
-  final Function fu;
-  final Set<int> cardSet;
-  Widget build(BuildContext context){
-    final List<Widget> _widget = List.generate(
-       // cardDeck.length,
-            20,
-            (index) => CardButton(carddecknumber: cardDeck[index].num, fu: fu,isPressed: cardSet.contains(cardDeck[index].num))
-    );
-    return GridView.extent(
-      maxCrossAxisExtent: 30,
-      children: _widget
-    );
-  }
-//Vertical viewport was given unbounded height.
-// Viewports expand in the scrolling direction to fill their container.
-// In this case, a vertical viewport was given an unlimited amount of vertical space in which to expand. This situation typically happens when a scrollable widget is nested inside another scrollable widget.
 }
 
 class RowKeyBoard extends StatelessWidget {
@@ -247,13 +266,19 @@ class RowKeyBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          CardButton(carddecknumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)),
-          CardButton(carddecknumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)),
-          CardButton(carddecknumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)),
-          CardButton(carddecknumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)),
-          CardButton(carddecknumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)),
-          CardButton(carddecknumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)),
+        children:
+          //_widget
+          <Widget>[
+            ((i0+1)<cardDeck.length) ? CardButton(carddecknumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
+            ((i0+2)<cardDeck.length) ? CardButton(carddecknumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
+            ((i0+3)<cardDeck.length) ? CardButton(carddecknumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
+            ((i0+4)<cardDeck.length) ? CardButton(carddecknumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
+            ((i0+5)<cardDeck.length) ? CardButton(carddecknumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
+            ((i0+6)<cardDeck.length) ? CardButton(carddecknumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)) : Container(),
+            ((i0+7)<cardDeck.length) ? CardButton(carddecknumber: i0+6, fu: fu,isPressed: cardSet.contains(cardDeck[i0+6].num)) : Container(),
+            ((i0+8)<cardDeck.length) ? CardButton(carddecknumber: i0+7, fu: fu,isPressed: cardSet.contains(cardDeck[i0+7].num)) : Container(),
+            ((i0+9)<cardDeck.length) ? CardButton(carddecknumber: i0+8, fu: fu,isPressed: cardSet.contains(cardDeck[i0+8].num)) : Container(),
+            ((i0+10)<cardDeck.length) ? CardButton(carddecknumber: i0+9, fu: fu,isPressed: cardSet.contains(cardDeck[i0+9].num)) : Container(),
         ]
     );
   }
