@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    checkin();
     return MaterialApp(
       title: 'Chain me Up Check',
       theme: ThemeData(
@@ -43,28 +42,10 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-Future<void> checkin() async {
-  /**FirebaseAuth.instance.userChanges().listen((User? user) {
-      if (user == null) {print('User is currently signed out!');
-      } else {print('User is signed in!');}
-      }); **/
-  try {
-    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: 'fabdevaux@gmail.com',
-        password: 'NRJChain!'
-    );
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'user-not-found') {
-      print('No user found for that email.');
-    } else if (e.code == 'wrong-password') {
-      print('Wrong password provided for that user.');
-    }
-  }
-}
-
 class _MyHomePageState extends State<MyHomePage> {
   Set<int> _cardSet = {};
   String _results="";
+  bool _isLogged=false;
 
  void _updateCardState(int num){ // add card if not there and return true, or remove and return false
     setState(() {
@@ -74,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
-void _checkCardSet () {
+ void _checkCardSet () {
     String stringToCheck="";
     List<int> toSort=List<int>.from(_cardSet);
     toSort.sort();
@@ -92,7 +73,30 @@ void _checkCardSet () {
     _updateCardState(99);
  }
 
-Future<void> _readIt(String sToCheck) async {
+  Future<void> setIsLogged() async {
+    FirebaseAuth.instance.userChanges().listen((User? user) {
+      if (user == null) {_isLogged=false;
+      } else {_isLogged=true;}
+    });
+    _updateCardState(99);
+  }
+  Future<void> checkin(String email, String pass) async {
+       try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: pass
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+                //print('No user found for that email.'); Make alert
+      } else if (e.code == 'wrong-password') {
+                //print('Wrong password provided for that user.');
+      }
+    }
+    setIsLogged();
+  }
+
+  Future<void> _readIt(String sToCheck) async {
     var db = FirebaseFirestore.instance;
     print(sToCheck);
     db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).get().then(
@@ -117,7 +121,7 @@ Future<void> _readIt(String sToCheck) async {
     );
 
   }
-void _fillDB(){
+  void _fillDB(){
    //fill data in firestore
   /**var db = FirebaseFirestore.instance;
   final ChainResult data1=ChainResult("01-02",25,2,0,0,8);
@@ -126,16 +130,16 @@ void _fillDB(){
   _pickFile();
   }
 
-Future<void>  _pickFile() async {
+  Future<void>  _pickFile() async {
    // read csv file with all the solutions
     final input = await  rootBundle.loadString('assets/CMPsol.csv');
     List<List<dynamic>> csvTable = const CsvToListConverter().convert(input);
     //print(csvTable[0]);
-    //print(csvTable.length);
+    //printjgj(csvTable.length);
     // add to firestore
     var db = FirebaseFirestore.instance;
-    var imin=100000; // ok
-    var imax=105000; //
+    var imin=147822; // ok
+    var imax=150000; // up 169736
     for (var i = imin; i < imax; i++){
       db.collection("Chains").add(ChainResult.short(csvTable[i]).toMap());
       //print(ChainResult.short(csvTable[i]).toMap());
@@ -145,10 +149,49 @@ Future<void>  _pickFile() async {
 
   @override
   Widget build(BuildContext context) {
+    setIsLogged();
+    String _email="";
+    String _pass="";
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: <Widget>[
+          TextButton(onPressed: () async {
+            String? response = await showDialog<String>(context: context,
+              builder : (BuildContext context) {
+                return AlertDialog(
+                  content: const Text('Please enter you credentials'),
+                  actions: <Widget>[
+                  TextField(
+                     onChanged: (String val) => _email = val,
+                     decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'you@email.com',
+                    icon: Icon(Icons.contact_mail),
+                  )),
+                    TextField(
+                        onChanged: (String val) => _pass = val,
+                        //controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'ABC2023',
+                          icon: Icon(Icons.password),
+                        )),
+                    TextButton(
+                        child: const Text('Log'),
+                        onPressed: () => {checkin(_email, _pass)}
+                          //Navigator.pop(context, 'Done');
+
+                     ), //text button
+                  ],
+                ); //alertdialog
+              }, // builder
+
+            );
+            },
+              child:  _isLogged ? const Text( "Logged"): const Text("Not logged")),
+        ],
       ),
       body: Center(
         child: Column(
