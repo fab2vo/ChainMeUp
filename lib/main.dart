@@ -1,8 +1,8 @@
 // CLI installation with npm (not binary) cf https://firebase.google.com/docs/flutter/setup?platform=android&hl=fr
 
 //import 'dart:io';
-import 'package:csv/csv.dart';
-import 'package:flutter/services.dart';
+//import 'package:csv/csv.dart';
+//import 'package:flutter/services.dart';
 //import 'dart:convert' show utf8;
 
 import 'package:secondflutter/const_cmp.dart';
@@ -16,7 +16,7 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -47,6 +47,12 @@ class _MyHomePageState extends State<MyHomePage> {
   String _results="";
   bool _isLogged=false;
 
+  @override
+  void initState() {
+    _setIsLogged();
+    super.initState();
+  }
+
  void _updateCardState(int num){ // add card if not there and return true, or remove and return false
     setState(() {
       if (num!=99) {
@@ -55,14 +61,9 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
+
  void _checkCardSet () {
-    String stringToCheck="";
-    List<int> toSort=List<int>.from(_cardSet);
-    toSort.sort();
-    for(int i in toSort){
-      stringToCheck += "-${i.toString().padLeft(2, '0')}";
-    }
-    stringToCheck=stringToCheck.substring(1);
+    String stringToCheck=convCardSet(_cardSet);
     _results=" Checking $stringToCheck ...";
     _readIt(stringToCheck);
     _updateCardState(99);
@@ -70,76 +71,70 @@ class _MyHomePageState extends State<MyHomePage> {
 
  void _initCardSet () {
     _cardSet={};
+    _results="";
     _updateCardState(99);
  }
 
-  Future<void> setIsLogged() async {
+  Future<void> _setIsLogged() async {
     FirebaseAuth.instance.userChanges().listen((User? user) {
       if (user == null) {_isLogged=false;
       } else {_isLogged=true;}
     });
     _updateCardState(99);
   }
+
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
-    print("LOGGED OUT");
+    _initCardSet();
     _updateCardState(99);
   }
 
-  Future<void> checkin(String email, String pass) async {
-       try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+  Future<void> _checkin(String email, String pass) async {
+      try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: pass
       );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-                //print('No user found for that email.'); Make alert
-      } else if (e.code == 'wrong-password') {
+    } on FirebaseAuthException {
           const SnackBar sb = SnackBar(
-            content: Text('Wrong password'),
+            content: Text('Invalid credentials'),
             duration: Duration(seconds: 5),
-            /**action: SnackBarAction(
-              textColor: Colors.white,
-              label: "UNDO",
-              onPressed: () {},
-            ),**/
-        );
-        print('Wrong password provided for that user.');
+          );
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(sb);
       }
-    }
-    setIsLogged();
+    _setIsLogged();
   }
 
   Future<void> _readIt(String sToCheck) async {
     var db = FirebaseFirestore.instance;
-    print(sToCheck);
     db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).get().then(
           (querySnapshot) {
         if (querySnapshot.docs.isNotEmpty){
           _results="Cost    GHG    H20   Land  Protest          \n";
-          List<ChainResult> _resultList=[];
-          ChainResult _chRes;
+          List<ChainResult> resultList=[];
+          ChainResult chRes;
           for (var docSnapshot in querySnapshot.docs){
-            _chRes=ChainResult(sToCheck,docSnapshot.data()["Cost"] as double,
-                docSnapshot.data()["GHG"] as double,
+            chRes=ChainResult(sToCheck,docSnapshot.data()["Cost"] as double,
+                docSnapshot.data()["G"
+                    "HG"] as double,
                 docSnapshot.data()["H2O"] as double,
                 docSnapshot.data()["Land"] as double,
                 docSnapshot.data()["Protest"] as double);
-            _resultList.add(_chRes);
-            _results += _chRes.affi();
+            resultList.add(chRes);
+            _results += chRes.affi();
           }
         } else {_results="No such chain"; }
         _updateCardState(99);
       },
-      onError: (e) => print("Error completing: $e"),
+      //onError: (e) => print("Error completing: $e"),
     );
 
   }
+  /**
   void _fillDB(){
   _pickFile();
   }
-
   Future<void>  _pickFile() async {
    // read csv file with all the solutions and upload
     final input = await  rootBundle.loadString('assets/CMPsol.csv');
@@ -152,12 +147,12 @@ class _MyHomePageState extends State<MyHomePage> {
       }
      //print("Uploade de $imin à $imax");
     }
+   **/
 
   @override
   Widget build(BuildContext context) {
-    setIsLogged();
-    String _email="";
-    String _pass="";
+    String varEmail="";
+    String varPass="";
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -165,35 +160,35 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: <Widget>[
           TextButton(onPressed: () async {
             if (_isLogged) {_signOut();} else {
-            String? response = await showDialog<String>(context: context,
+              await showDialog<String>(context: context,
               builder : (BuildContext context) {
                 return AlertDialog(
                   content: const Text('Please enter you credentials'),
                   actions: <Widget>[
                   TextField(
-                     onChanged: (String val) => _email = val,
+                     onChanged: (String val) => varEmail = val,
                      decoration: const InputDecoration(
                       labelText: 'Email',
                       hintText: 'you@email.com',
                     icon: Icon(Icons.contact_mail),
                   )),
                     TextField(
-                        onChanged: (String val) => _pass = val,
+                        onChanged: (String val) => varPass = val,
                         //controller: _emailController,
                         decoration: const InputDecoration(
                           labelText: 'Password',
-                          hintText: 'ABC2023',
+                          hintText: 'ABC123',
                           icon: Icon(Icons.password),
                         )),
                     TextButton(
-                        child: const Text('Log'),
+                        child: const Text('Login'),
                         onPressed: () => Navigator.pop(context, "")
                      ), //text button
                   ],
                 ); //alertdialog
               }, // builder
-    ); // ShowDialog
-            checkin(_email, _pass);
+            ); // ShowDialog
+            _checkin(varEmail, varPass);
             }}, //async button log
               child:  _isLogged ? const Text( "Logged"): const Text("Not logged")),
         ],
@@ -202,13 +197,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            //GridCard(fu: _updateCardState, cardSet: _cardSet),
             KeyBoard(fu: _updateCardState, cardSet: _cardSet),
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () => _checkCardSet(),
+                    onPressed: () => _isLogged ? _checkCardSet():null,
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
@@ -224,8 +218,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ]
             ),
             Container(
-                margin:EdgeInsets.only(top:15.0),
-                child:Text(_results)
+                margin:const EdgeInsets.only(top:15.0),
+                child:Text(_results,
+                        style: const TextStyle(fontSize: 14)
+                    )
             ),
             /**ElevatedButton(
                 onPressed: () {
@@ -286,7 +282,7 @@ class KeyBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin:EdgeInsets.only(top:20.0, bottom:15.0),
+      margin:const EdgeInsets.only(top:20.0, bottom:15.0),
       child : Column(
         children: <Widget>[
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 0),
@@ -298,6 +294,7 @@ class KeyBoard extends StatelessWidget {
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 60),
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 70),
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 80),
+          //Text(convCardSet(cardSet),style: TextStyle(fontSize: 18)),
         ]
       )
     )
@@ -332,52 +329,14 @@ class RowKeyBoard extends StatelessWidget {
   }
 }
 
-/**
-bool checkCardSet (Set<int> cardSet) {
+
+String convCardSet (Set<int> cardSet) {
+  if (cardSet.isEmpty) return "";
   String stringToCheck="";
   List<int> toSort=List<int>.from(cardSet);
   toSort.sort();
   for(int i in toSort){
     stringToCheck += "-${i.toString().padLeft(2, '0')}";
   }
-  stringToCheck=stringToCheck.substring(1);
-  FirebaseAuth.instance
-      .userChanges()
-      .listen((User? user) {
-    if (user == null) {
-      print('User is currently signed out!');
-    } else {
-      print('User is signed in!');
-    }
-  });
-  return checkInDB(stringToCheck);
+  return stringToCheck.substring(1);
 }
-
-bool checkInDB(String sToCheck) {
-  // Create a new user with a first and last name
-  //final chain = <String, dynamic>{
-  //  "Chain Id": "12-20-41",
-  //  "Cost": 27.2,
-  //  "GHG": 1.97,
-  //  "H2O":4.5,
-  //  "Land":1.86,
-  //  "Protest": 1.8
-  //};
-  readIt(sToCheck);
-  return true;
-}
-
-Future<void> readIt(String sToCheck)async {
-  var db = FirebaseFirestore.instance;
-  db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).get().then(
-        (querySnapshot) {
-      if (querySnapshot.docs.isNotEmpty){
-        for (var docSnapshot in querySnapshot.docs) {
-          print('${docSnapshot.id} => ${docSnapshot.data()}');
-        }
-      } else {print("Not found");}
-    },
-    onError: (e) => print("Error completing: $e"),
-  );
-}
-    **/
