@@ -80,6 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     _updateCardState(99);
   }
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    print("LOGGED OUT");
+    _updateCardState(99);
+  }
+
   Future<void> checkin(String email, String pass) async {
        try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -90,7 +96,16 @@ class _MyHomePageState extends State<MyHomePage> {
       if (e.code == 'user-not-found') {
                 //print('No user found for that email.'); Make alert
       } else if (e.code == 'wrong-password') {
-                //print('Wrong password provided for that user.');
+          const SnackBar sb = SnackBar(
+            content: Text('Wrong password'),
+            duration: Duration(seconds: 5),
+            /**action: SnackBarAction(
+              textColor: Colors.white,
+              label: "UNDO",
+              onPressed: () {},
+            ),**/
+        );
+        print('Wrong password provided for that user.');
       }
     }
     setIsLogged();
@@ -122,29 +137,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
   void _fillDB(){
-   //fill data in firestore
-  /**var db = FirebaseFirestore.instance;
-  final ChainResult data1=ChainResult("01-02",25,2,0,0,8);
-  final ChainResult data2=ChainResult("02-12",20,3,0.2,20,0);
-  db.collection("Chains").add(data1.toMap()); **/
   _pickFile();
   }
 
   Future<void>  _pickFile() async {
-   // read csv file with all the solutions
+   // read csv file with all the solutions and upload
     final input = await  rootBundle.loadString('assets/CMPsol.csv');
     List<List<dynamic>> csvTable = const CsvToListConverter().convert(input);
-    //print(csvTable[0]);
-    //printjgj(csvTable.length);
-    // add to firestore
     var db = FirebaseFirestore.instance;
-    var imin=147822; // ok
-    var imax=150000; // up 169736
+    var imin=169000; // ok
+    var imax=csvTable.length; // up 169736
     for (var i = imin; i < imax; i++){
       db.collection("Chains").add(ChainResult.short(csvTable[i]).toMap());
-      //print(ChainResult.short(csvTable[i]).toMap());
       }
-     print("Uploade de $imin à $imax");
+     //print("Uploade de $imin à $imax");
     }
 
   @override
@@ -158,6 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         actions: <Widget>[
           TextButton(onPressed: () async {
+            if (_isLogged) {_signOut();} else {
             String? response = await showDialog<String>(context: context,
               builder : (BuildContext context) {
                 return AlertDialog(
@@ -180,16 +187,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         )),
                     TextButton(
                         child: const Text('Log'),
-                        onPressed: () => {checkin(_email, _pass)}
-                          //Navigator.pop(context, 'Done');
-
+                        onPressed: () => Navigator.pop(context, "")
                      ), //text button
                   ],
                 ); //alertdialog
               }, // builder
-
-            );
-            },
+    ); // ShowDialog
+            checkin(_email, _pass);
+            }}, //async button log
               child:  _isLogged ? const Text( "Logged"): const Text("Not logged")),
         ],
       ),
@@ -222,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 margin:EdgeInsets.only(top:15.0),
                 child:Text(_results)
             ),
-            ElevatedButton(
+            /**ElevatedButton(
                 onPressed: () {
                   _fillDB();
                 },
@@ -230,7 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
                 child: const Text('Fill')
-            ),
+            ),**/
           ],
         ),
       ),
