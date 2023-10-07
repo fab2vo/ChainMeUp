@@ -1,10 +1,5 @@
 // CLI installation with npm (not binary) cf https://firebase.google.com/docs/flutter/setup?platform=android&hl=fr
 
-//import 'dart:io';
-//import 'package:csv/csv.dart';
-//import 'package:flutter/services.dart';
-//import 'dart:convert' show utf8;
-
 import 'package:secondflutter/const_cmp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Set<int> _cardSet = {};
   String _results="";
   bool _isLogged=false;
+  List<ChainResult> _resultList=[];
 
   @override
   void initState() {
@@ -53,7 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
- void _updateCardState(int num){ // add card if not there and return true, or remove and return false
+ void _updatHomePageState(int num){
+    // add card if not there and return true, or remove and return false
     setState(() {
       if (num!=99) {
         if (_cardSet.contains(num)) {_cardSet.remove(num);}
@@ -64,15 +61,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
  void _checkCardSet () {
     String stringToCheck=convCardSet(_cardSet);
-    _results=" Checking $stringToCheck ...";
+    _results=" Checking ...";
+    _resultList=[];
     _readIt(stringToCheck);
-    _updateCardState(99);
+    _updatHomePageState(99);
   }
 
  void _initCardSet () {
     _cardSet={};
     _results="";
-    _updateCardState(99);
+    _resultList=[];
+    _updatHomePageState(99);
  }
 
   Future<void> _setIsLogged() async {
@@ -80,13 +79,13 @@ class _MyHomePageState extends State<MyHomePage> {
       if (user == null) {_isLogged=false;
       } else {_isLogged=true;}
     });
-    _updateCardState(99);
+    _updatHomePageState(99);
   }
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     _initCardSet();
-    _updateCardState(99);
+    _updatHomePageState(99);
   }
 
   Future<void> _checkin(String email, String pass) async {
@@ -100,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
             content: Text('Invalid credentials'),
             duration: Duration(seconds: 5),
           );
-          // ignore: use_build_context_synchronously
+          //ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(sb);
       }
     _setIsLogged();
@@ -108,24 +107,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _readIt(String sToCheck) async {
     var db = FirebaseFirestore.instance;
-    db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).get().then(
+    //FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: false);
+    db.collection("Chains").where("Chain Id", isEqualTo: sToCheck).limit(20).get().then(
           (querySnapshot) {
         if (querySnapshot.docs.isNotEmpty){
           _results="Cost    GHG    H20   Land  Protest          \n";
-          List<ChainResult> resultList=[];
-          ChainResult chRes;
           for (var docSnapshot in querySnapshot.docs){
-            chRes=ChainResult(sToCheck,docSnapshot.data()["Cost"] as double,
-                docSnapshot.data()["G"
-                    "HG"] as double,
+            _resultList.add(ChainResult(sToCheck,docSnapshot.data()["Cost"] as double,
+                docSnapshot.data()["GHG"] as double,
                 docSnapshot.data()["H2O"] as double,
                 docSnapshot.data()["Land"] as double,
-                docSnapshot.data()["Protest"] as double);
-            resultList.add(chRes);
-            _results += chRes.affi();
+                docSnapshot.data()["Protest"] as double));
+            _results += _resultList.last.affi();
           }
-        } else {_results="No such chain"; }
-        _updateCardState(99);
+        } else {_results=EMPTYSTRING; }
+        _updatHomePageState(99);
       },
       //onError: (e) => print("Error completing: $e"),
     );
@@ -197,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            KeyBoard(fu: _updateCardState, cardSet: _cardSet),
+            KeyBoard(fu: _updatHomePageState, cardSet: _cardSet),
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
@@ -217,11 +213,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   ]
             ),
+            Text(convCardSet(_cardSet)),
             Container(
                 margin:const EdgeInsets.only(top:15.0),
-                child:Text(_results,
+                child: (_resultList.isEmpty) ?
+                  Text(_results,
                         style: const TextStyle(fontSize: 14)
-                    )
+                    ):
+                    ResultBarList(chainresultlist: _resultList)
             ),
             /**ElevatedButton(
                 onPressed: () {
@@ -282,7 +281,7 @@ class KeyBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin:const EdgeInsets.only(top:20.0, bottom:15.0),
+      margin:const EdgeInsets.only(top:15, bottom:15.0),
       child : Column(
         children: <Widget>[
         RowKeyBoard(fu: fu, cardSet: cardSet, i0: 0),
@@ -329,6 +328,53 @@ class RowKeyBoard extends StatelessWidget {
   }
 }
 
+class ResultBar extends StatelessWidget{
+  const ResultBar({super.key, required this.chainresult});
+  final ChainResult chainresult;
+    @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin:const EdgeInsets.only(left:15.0, right:15.0),
+        child : Card(child:Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children :<Widget>[
+            const Image(image:AssetImage('assets/Chain_Me_Up_Cover_Cost_icon.png'), width:30),
+            Text(chainresult.getCost()),
+            const Image(image:AssetImage('assets/Chain_Me_Up_Cover_GHG_icon.png'), width:30),
+            Text(chainresult.getGHG()),
+            const Image(image:AssetImage('assets/Chain_Me_Up_Cover_H2O_icon.png'), width:30),
+            Text(chainresult.getH2O()),
+            const Image(image:AssetImage('assets/Chain_Me_Up_Cover_land_icon.png'), width:30),
+            Text(chainresult.getLand()),
+            const Image(image:AssetImage('assets/Chain_Me_Up_Cover_protest_icon.png'), width:30),
+            Text(chainresult.getProtest()),
+            Text(" > ${chainresult.getChallengeresult()}"),
+        ]
+      )
+        )
+    );
+  }
+}
+
+class ResultBarList extends StatelessWidget{
+  const ResultBarList({super.key, required this.chainresultlist});
+  final List<ChainResult> chainresultlist;
+  @override
+  Widget build(BuildContext context) {
+  List<ChainResult> crl=chainresultlist.toSet().toList();  //eliminer odublons
+  final List<Widget> _widget = List.generate(
+      (chainresultlist.length<7)?chainresultlist.length:6,
+        (index) => ResultBar(chainresult: crl[index])
+    );
+  if (chainresultlist.length>6){
+    _widget.add(Card(child:Text("         ...         ")));
+  }
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.start,
+    children: _widget,
+    );
+  }
+}
 
 String convCardSet (Set<int> cardSet) {
   if (cardSet.isEmpty) return "";

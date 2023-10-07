@@ -63,9 +63,13 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - assets/CMPsol.csv
-     - assets/CheatmeUp_essai2.json
-  #   - images/a_dot_ham.jpeg
+     #- assets/CMPsol.csv
+     #- assets/CheatmeUp_essai2.json
+     - assets/Chain_Me_Up_Cover_Cost_icon.png
+     - assets/Chain_Me_Up_Cover_GHG_icon.png
+     - assets/Chain_Me_Up_Cover_H2O_icon.png
+     - assets/Chain_Me_Up_Cover_land_icon.png
+     - assets/Chain_Me_Up_Cover_protest_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
