@@ -1,5 +1,4 @@
 // CLI installation with npm (not binary) cf https://firebase.google.com/docs/flutter/setup?platform=android&hl=fr
-
 import 'package:secondflutter/const_cmp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -262,7 +261,7 @@ class CardButton extends StatelessWidget {
                     fontWeight: FontWeight.bold),
                     backgroundColor: cardDeck[carddecknumber].color,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     side: BorderSide(color: (isPressed) ? Colors.grey.shade500 : cardDeck[carddecknumber].color ,width: 5)
                 )
               ),
@@ -362,16 +361,16 @@ class ResultBarList extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
   List<ChainResult> crl=chainresultlist.toSet().toList();  //eliminer odublons
-  final List<Widget> _widget = List.generate(
+  final List<Widget> internalWidget = List.generate(
       (chainresultlist.length<7)?chainresultlist.length:6,
         (index) => ResultBar(chainresult: crl[index])
     );
   if (chainresultlist.length>6){
-    _widget.add(Card(child:Text("         ...         ")));
+    internalWidget.add(const Card(child:Text("         ...         ")));
   }
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
-    children: _widget,
+    children: internalWidget,
     );
   }
 }
