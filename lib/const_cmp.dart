@@ -18,8 +18,8 @@ final cardDeck=[ GameCard(02,colH2H2),GameCard(03,colH2H2),GameCard(04,colH2H2),
                  GameCard(80,colStor),GameCard(81,colStor),GameCard(82,colStor),GameCard(83,colStor),GameCard(84,colStor),GameCard(85,colStor),GameCard(86,colStor),GameCard(87,colHeat),GameCard(88,colHeat),
                  GameCard(89,colHeat),GameCard(90,colHeat),GameCard(91,colHeat),GameCard(92,colHeat),GameCard(93,colHeat),
 ];
-const String EMPTYSTRING="No such chain";
-const String CHALLENGE2="Low emission";
-const String CHALLENGE3="Sustainable";
-const String CHALLENGE4="Massive Sust.";
-const String CHALLENGE5="Massive Net0";
+const String noSuchChain="No such chain";
+const String lowEmission="Low emission";
+const String susTainable="Sustainable";
+const String massiveSustainable="Large Sust.";
+const String netZero="Large Net0";

@@ -1,21 +1,23 @@
 // CLI installation with npm (not binary) cf https://firebase.google.com/docs/flutter/setup?platform=android&hl=fr
 
+//import 'dart:developer';
 import 'package:secondflutter/const_cmp.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:secondflutter/gamecard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'package:secondflutter/completekeyboard.dart';
 import 'package:secondflutter/SuperResultBarList.dart';
+import 'package:secondflutter/gamecard.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  //WidgetsFlutterBinding.ensureInitialized();
-  //SystemChrome.setPreferredOrientations(
-  //    [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   runApp(const MyApp());
 }
 
@@ -55,17 +57,18 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  void _updatHomePageState(int num) {
+  void _updateHomePageState(int num) {
     // add card if not there and return true, or remove and return false
     setState(() {
-      if (num != 99) {
-        if (_cardSet.contains(num)) {
-          _cardSet.remove(num);
+        if (num != 99) {
+          if (_cardSet.contains(num)) {
+            _cardSet.remove(num);
+          }
+          else {
+            _cardSet.add(num);
+          }
+          _results=convCardSet(_cardSet);
         }
-        else {
-          _cardSet.add(num);
-        }
-      }
     });
   }
 
@@ -74,19 +77,19 @@ class _MyHomePageState extends State<MyHomePage> {
     _results = " Checking ...";
     _resultList = [];
     _readIt(stringToCheck);
-    _updatHomePageState(99);
+    _updateHomePageState(99);
   }
 
   void _initCardSet() {
     _cardSet = {};
     _results = "";
     _resultList = [];
-    _updatHomePageState(99);
+    _updateHomePageState(99);
   }
 
-  void _togglescreen() {
+  void _toggleScreen() {
     _screenIsEnlarged = !_screenIsEnlarged;
-    _updatHomePageState(99);
+    _updateHomePageState(99);
   }
 
   Future<void> _setIsLogged() async {
@@ -97,25 +100,31 @@ class _MyHomePageState extends State<MyHomePage> {
         _isLogged = true;
       }
     });
-    _updatHomePageState(99);
+    _updateHomePageState(99);
   }
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     _initCardSet();
-    _updatHomePageState(99);
+    _updateHomePageState(99);
   }
 
-  Future<void> _checkin(String email, String pass) async {
+  Future<void> _checkIn(String email, String pass) async {
+    String messAge="";
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: pass
       );
-    } on FirebaseAuthException {
-      const SnackBar sb = SnackBar(
-        content: Text('Invalid credentials'),
-        duration: Duration(seconds: 5),
+    } on FirebaseAuthException catch(e) {
+      messAge="";
+      // error codes don't work e.code and e.message
+      if (e.code == 'network-request-failed') messAge="Network request failed";
+      if (e.code == 'wrong-password') messAge="Wrong password";
+      if (e.code == 'user-not-found') messAge="User not found";
+      SnackBar sb = SnackBar(
+        content: Text("Failed to connect and log ($messAge)"),
+        duration: const Duration(seconds: 5),
       );
       //ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(sb);
@@ -127,12 +136,11 @@ class _MyHomePageState extends State<MyHomePage> {
     var db = FirebaseFirestore.instance;
     //FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: false);
     db.collection("Chains").where("Chain Id", isEqualTo: sToCheck)
-        .limit(20)
+        .limit(72)
         .get()
         .then(
           (querySnapshot) {
         if (querySnapshot.docs.isNotEmpty) {
-          _results = "Cost    GHG    H20   Land  Protest          \n";
           for (var docSnapshot in querySnapshot.docs) {
             _resultList.add(
                 ChainResult(sToCheck, docSnapshot.data()["Cost"] as double,
@@ -142,11 +150,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     docSnapshot.data()["Protest"] as double));
             _results += _resultList.last.affi();
           }
+          _results="$sToCheck found";
           _resultList = removeDuplicates(_resultList);
         } else {
-          _results = EMPTYSTRING;
+          _results = noSuchChain;
         }
-        _updatHomePageState(99);
+        _updateHomePageState(99);
       },
       //onError: (e) => print("Error completing: $e"),
     );
@@ -214,7 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ); //alertdialog
                 }, // builder
               ); // ShowDialog
-              _checkin(varEmail, varPass);
+              _checkIn(varEmail, varPass);
             }
           }, //async button log
               child: _isLogged ? const Text("Logged") : const Text(
@@ -226,19 +235,22 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             CompleteKeyBoard(
-                fupdate: _updatHomePageState,
+                fuUpdate: _updateHomePageState,
                 cardSet: _cardSet,
-                withbuttons: _isLogged,
-                fucheck: _checkCardSet,
-                initcard: _initCardSet,
+                withButtons: _isLogged,
+                fuCheck: _checkCardSet,
+                fuInitCard: _initCardSet,
                 isShortened: _screenIsEnlarged),
-            StringDisplayCard(thestring: convCardSet(_cardSet),
+            StringDisplayCard(
+                //thestring: convCardSet(_cardSet),
+                theString: _results,
                 isShortened: _screenIsEnlarged),
             SuperResultBarList(
-                chainresultlist: _resultList,
-                nummaxitem: 6,
-                isshort: !_screenIsEnlarged,
-                futogglescreen: _togglescreen)
+                chainResList: _resultList,
+                nMax: 6,
+                isShort: !_screenIsEnlarged,
+                fuTog: _toggleScreen,
+            )
           ],
         ),
       ),
@@ -259,6 +271,17 @@ String convCardSet (Set<int> cardSet) {
 }
 
 List<ChainResult> removeDuplicates(List<ChainResult> listcr){
-	// for(ChainResult cr in listcr){print(cr.xxx);}
-	return listcr.toSet().toList();
+  List<ChainResult> dummy=[];
+  bool testval=false;
+  for(ChainResult cr in listcr){
+      //if cr not in dummy add
+      testval=false;
+      for(ChainResult xr in dummy){
+        if (xr.testEqual(cr)) testval=true;
+      }
+      if (!testval) dummy.add(cr);
+    }
+  dummy.sort((a, b) => a.cost.compareTo(b.cost));
+	return dummy;
 }
+
