@@ -21,11 +21,11 @@ class ChainResult {
   ChainResult.short (List<dynamic> lin)
       : this(lin[0], lin[1], lin[2], lin[3], lin[4], lin[5]);
 
-  String getCost(){return cost.round().toString().padRight(2," ").padLeft(1," ");}
-  String getGHG(){return ghg.round().toString().padRight(2," ").padLeft(1," ");}
-  String getH2O(){return H2O.round().toString().padRight(2," ").padLeft(1," ");}
-  String getLand(){return land.round().toString().padRight(2," ").padLeft(1," ");}
-  String getProtest(){return protest.round().toString().padRight(2," ").padLeft(1," ");}
+  String getCost(){return quickFormat(cost);}
+  String getGHG(){return quickFormat(ghg);}
+  String getH2O(){return quickFormat(H2O);}
+  String getLand(){return quickFormat(land);}
+  String getProtest(){return quickFormat(protest);}
 
   Map<String, dynamic> toMap() {
     return {
@@ -36,6 +36,11 @@ class ChainResult {
       "Land": land,
       "Protest": protest
     };
+  }
+
+  String quickFormat(double dd){
+    String st=dd.round().toString().padRight(1);
+    return st.padLeft(4-st.length," ");
   }
 
   bool isMassive(){

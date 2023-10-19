@@ -26,6 +26,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.fdx.secondflutter"
+    //manifestPlaceholders = [applicationName: "android.app.seconflutter"]
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 

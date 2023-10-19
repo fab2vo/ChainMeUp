@@ -40,7 +40,7 @@ class ResultBarList extends StatelessWidget {
       _widget.add(GestureDetector(
         onTap: () => fuTog(),
         child:
-        Card(child: Text(" ${chainResList.length - nMax} more results ")),
+        Card(child: Text("   ${chainResList.length - nMax} more results   ")),
       ) // gesture
       ); //add widget
     }
@@ -93,24 +93,24 @@ class ResultBar extends StatelessWidget {
                 children: <Widget>[
               const Image(
                   image: AssetImage('assets/Chain_Me_Up_Cover_Cost_icon.png'),
-                  width: 30),
+                  width: 25),
               Text(chainResult.getCost()),
               const Image(
                   image: AssetImage('assets/Chain_Me_Up_Cover_GHG_icon.png'),
-                  width: 30),
+                  width: 25),
               Text(chainResult.getGHG()),
               const Image(
                   image: AssetImage('assets/Chain_Me_Up_Cover_H2O_icon.png'),
-                  width: 30),
+                  width: 25),
               Text(chainResult.getH2O()),
               const Image(
                   image: AssetImage('assets/Chain_Me_Up_Cover_land_icon.png'),
-                  width: 30),
+                  width: 25),
               Text(chainResult.getLand()),
               const Image(
                   image:
                       AssetImage('assets/Chain_Me_Up_Cover_protest_icon.png'),
-                  width: 30),
+                  width: 25),
               Text(chainResult.getProtest()),
               Text(" > ${chainResult.getChallengeresult()}"),
             ])));
