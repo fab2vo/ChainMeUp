@@ -18,7 +18,8 @@ final cardDeck=[ GameCard(02,colH2H2),GameCard(03,colH2H2),GameCard(04,colH2H2),
                  GameCard(80,colStor),GameCard(81,colStor),GameCard(82,colStor),GameCard(83,colStor),GameCard(84,colStor),GameCard(85,colStor),GameCard(86,colStor),GameCard(87,colHeat),GameCard(88,colHeat),
                  GameCard(89,colHeat),GameCard(90,colHeat),GameCard(91,colHeat),GameCard(92,colHeat),GameCard(93,colHeat),
 ];
-const String noSuchChain="No such chain";
+const String noSuchChain="No chain for this card set";
+const String existButNoPerf="";
 const String lowEmission="Low emission";
 const String susTainable="Sustainable";
 const String massiveSustainable="Large Sust.";

@@ -1,7 +1,6 @@
 // CLI installation with npm (not binary) cf https://firebase.google.com/docs/flutter/setup?platform=android&hl=fr
 
 //import 'dart:developer';
-import 'package:secondflutter/const_cmp.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +10,7 @@ import 'package:secondflutter/completekeyboard.dart';
 import 'package:secondflutter/SuperResultBarList.dart';
 import 'package:secondflutter/gamecard.dart';
 import 'package:flutter/services.dart';
+import 'dart:math';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,10 +46,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Set<int> _cardSet = {};
-  String _results = "";
   bool _isLogged = false;
-  bool _screenIsEnlarged = false;
+  bool _isCollapsed = true;
   List<ChainResult> _resultList = [];
+  bool _requestSubmitDisplay=false;
+  bool _chainSubmitted=false;
 
   @override
   void initState() {
@@ -61,35 +62,33 @@ class _MyHomePageState extends State<MyHomePage> {
     // add card if not there and return true, or remove and return false
     setState(() {
         if (num != 99) {
+          _requestSubmitDisplay = false;
           if (_cardSet.contains(num)) {
             _cardSet.remove(num);
           }
           else {
             _cardSet.add(num);
           }
-          _results=convCardSet(_cardSet);
         }
     });
   }
 
-  void _checkCardSet() {
-    String stringToCheck = convCardSet(_cardSet);
-    _results = " Checking ...";
-    _resultList = [];
-    _readIt(stringToCheck);
-    _updateHomePageState(99);
-  }
-
   void _initCardSet() {
     _cardSet = {};
-    _results = "";
     _resultList = [];
+    _requestSubmitDisplay=false;
     _updateHomePageState(99);
   }
 
-  void _toggleScreen() {
-    _screenIsEnlarged = !_screenIsEnlarged;
+
+
+  void _toggleCollapse() {
+    _isCollapsed = !_isCollapsed;
     _updateHomePageState(99);
+  }
+
+  bool _getStateSearching() {
+    return _chainSubmitted;
   }
 
   Future<void> _setIsLogged() async {
@@ -132,6 +131,15 @@ class _MyHomePageState extends State<MyHomePage> {
     _setIsLogged();
   }
 
+  void _checkCardSet() {
+    String stringToCheck = convCardSet(_cardSet);
+    _resultList = [];
+    _requestSubmitDisplay=true;
+    _chainSubmitted=true;
+    _readIt(stringToCheck);
+    _updateHomePageState(99);
+  }
+
   Future<void> _readIt(String sToCheck) async {
     var db = FirebaseFirestore.instance;
     //FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: false);
@@ -144,40 +152,21 @@ class _MyHomePageState extends State<MyHomePage> {
           for (var docSnapshot in querySnapshot.docs) {
             _resultList.add(
                 ChainResult(sToCheck, docSnapshot.data()["Cost"] as double,
-                    docSnapshot.data()["GHG"] as double,
+                     docSnapshot.data()["GHG"] as double,
                     docSnapshot.data()["H2O"] as double,
                     docSnapshot.data()["Land"] as double,
-                    docSnapshot.data()["Protest"] as double));
-            _results += _resultList.last.affi();
+                   docSnapshot.data()["Protest"] as double));
           }
-          _results="$sToCheck found";
           _resultList = removeDuplicates(_resultList);
-        } else {
-          _results = noSuchChain;
         }
+        _requestSubmitDisplay=true;
+        _isCollapsed=true;
+        _chainSubmitted=false;
         _updateHomePageState(99);
       },
       //onError: (e) => print("Error completing: $e"),
     );
   }
-
-  /** -----------------------------------------
-      void _fillDB(){
-      _pickFile();
-      }
-      Future<void>  _pickFile() async {
-      // read csv file with all the solutions and upload
-      final input = await  rootBundle.loadString('assets/CMPsol.csv');
-      List<List<dynamic>> csvTable = const CsvToListConverter().convert(input);
-      var db = FirebaseFirestore.instance;
-      var imin=169000; // ok
-      var imax=csvTable.length; // up 169736
-      for (var i = imin; i < imax; i++){
-      db.collection("Chains").add(ChainResult.short(csvTable[i]).toMap());
-      }
-      //print("Uploade de $imin à $imax");
-      }
-   **/
 
   @override
   Widget build(BuildContext context) {
@@ -185,11 +174,10 @@ class _MyHomePageState extends State<MyHomePage> {
     String varPass = "";
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: Colors.blue[700],
+        title: Text(widget.title,
+        style: const TextStyle(color: Colors.white),
+        ),
         actions: <Widget>[
           TextButton(onPressed: () async {
             if (_isLogged) {
@@ -230,56 +218,45 @@ class _MyHomePageState extends State<MyHomePage> {
                   "Not logged")),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            CompleteKeyBoard(
-                fuUpdate: _updateHomePageState,
-                cardSet: _cardSet,
-                withButtons: _isLogged,
-                fuCheck: _checkCardSet,
-                fuInitCard: _initCardSet,
-                isShortened: _screenIsEnlarged),
-            StringDisplayCard(
-                //thestring: convCardSet(_cardSet),
-                theString: _results,
-                isShortened: _screenIsEnlarged),
-            SuperResultBarList(
-                chainResList: _resultList,
-                nMax: 6,
-                isShort: !_screenIsEnlarged,
-                fuTog: _toggleScreen,
-            )
-          ],
-        ),
-      ),
-      // This trailing comma makes auto-formatting nicer for build methods.
+      body: Stack(
+        children:<Widget>[
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                CompleteKeyBoard(
+                    fuUpdate: _updateHomePageState,
+                    cardSet: _cardSet,
+                    fuCheck: _checkCardSet,
+                    fuInitCard: _initCardSet),
+                if (!_requestSubmitDisplay) Container() else DisplaySubmitResultSummary(
+                    resultList: _resultList,
+                    fu: _getStateSearching),
+              ],
+            ),
+          ),
+          if ((_requestSubmitDisplay)&&(_resultList.isNotEmpty))
+            AnimatedPositioned(
+              duration:const Duration(milliseconds: 300),
+              left:0,
+              bottom:(_isCollapsed)?(-40-min(_resultList.length,6)*32):-40,
+              child: BottomDrawerWidget(resultList: _resultList, isCollapsed: _isCollapsed, fuToggle: _toggleCollapse)
+          )
+        ]
+      )
     );
   } //widget Build
 }
 
-String convCardSet (Set<int> cardSet) {
-  if (cardSet.isEmpty) return "";
-  String stringToCheck="";
-  List<int> toSort=List<int>.from(cardSet);
-  toSort.sort();
-  for(int i in toSort){
-    stringToCheck += "-${i.toString().padLeft(2, '0')}";
-  }
-  return stringToCheck.substring(1);
-}
-
-List<ChainResult> removeDuplicates(List<ChainResult> listcr){
+List<ChainResult> removeDuplicates(List<ChainResult> listCr){
   List<ChainResult> dummy=[];
-  bool testval=false;
-  for(ChainResult cr in listcr){
-      //if cr not in dummy add
-      testval=false;
+  bool testVal=false;
+  for(ChainResult cr in listCr){
+      testVal=false;
       for(ChainResult xr in dummy){
-        if (xr.testEqual(cr)) testval=true;
+        if (xr.testEqual(cr)) testVal=true;
       }
-      if (!testval) dummy.add(cr);
+      if (!testVal) dummy.add(cr);
     }
   dummy.sort((a, b) => a.cost.compareTo(b.cost));
 	return dummy;
