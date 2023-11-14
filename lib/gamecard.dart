@@ -52,7 +52,7 @@ class ChainResult {
     return true;
   }
   String getChallengeresult() {
-    if (ghg>4.5) return "None";
+    if (ghg>4.5) return existButNoPerf;
     if ((H2O<13.5)&&(land<13.5)&&(protest<49.5)) { //&& AND
       if ((chainId.contains("50"))||(chainId.contains("51"))||(chainId.contains("52"))){ // bois
         return lowEmission;}

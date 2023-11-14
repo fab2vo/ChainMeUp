@@ -4,54 +4,43 @@ import 'package:flutter/material.dart';
 
 class CompleteKeyBoard extends StatelessWidget {
   const CompleteKeyBoard({super.key, required this.fuUpdate, required this.cardSet,
-							required this.withButtons, required this.fuCheck,
-							required this.fuInitCard, required this.isShortened});
+							required this.fuCheck,required this.fuInitCard});
   final Set<int> cardSet ;
   final Function fuUpdate;
   final Function fuCheck;
   final Function fuInitCard;
-  final bool withButtons;
-  final bool isShortened;
   @override
   Widget build(BuildContext context) {
-    if (isShortened) return Container();
     return Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children:<Widget>[
-            KeyBoard(fu: fuUpdate, cardSet: cardSet),
-			      ButtonKeyBoard(withButtons:withButtons,fuCheck:fuCheck, fuInitCard:fuInitCard)
+            ButtonKeyBoardPlus(fuCheck:fuCheck, cardSet: cardSet),
+            KeyBoard(fu: fuUpdate, cardSet: cardSet, fuInitCard: fuInitCard),
         ]
     );
   }
 }
 
-class ButtonKeyBoard extends StatelessWidget {
-  const ButtonKeyBoard({super.key, required this.withButtons, required this.fuCheck, required this.fuInitCard});
+
+class ButtonKeyBoardPlus extends StatelessWidget {
+  const ButtonKeyBoardPlus({super.key, required this.fuCheck, required this.cardSet});
   final Function fuCheck;
-  final Function fuInitCard;
-  final bool withButtons;
+  final Set<int> cardSet ;
   @override
   Widget build(BuildContext context) {
-    return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: () => withButtons ? fuCheck():null,
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8))),
-					              //onSurface: Colors.amber,
-                  child: const Text('Submit')
-                  ),
-                  ElevatedButton(
-                      onPressed: () => fuInitCard(),
-                      style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8))),
-                      child: const Text('Clear')
-                  ),
-                  ]
-            );
+    return Container(
+        width: 340,
+        margin:const EdgeInsets.only(top:15, bottom:0),
+        child:ElevatedButton(
+              onPressed: () =>  fuCheck(),
+              style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8))),
+              //onSurface: Colors.amber,
+               child: Text(convCardSet(cardSet))
+          )
+    )
+    ;
   }
 }
 
@@ -90,28 +79,33 @@ class CardButton extends StatelessWidget {
 }
 
 class KeyBoard extends StatelessWidget {
-  const KeyBoard({super.key, required this.fu, required this.cardSet});
+  const KeyBoard({super.key, required this.fu, required this.cardSet, required this.fuInitCard});
   final Set<int> cardSet ;
+  final Function fuInitCard;
   final Function fu;
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin:const EdgeInsets.only(top:15, bottom:15.0),
-      child : Column(
-        children: <Widget>[
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 0),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 10),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 20),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 30),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 40),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 50),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 60),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 70),
-        RowKeyBoard(fu: fu, cardSet: cardSet, i0: 80),
-          //Text(convCardSet(cardSet),style: TextStyle(fontSize: 18)),
+          margin:const EdgeInsets.only(top:15, bottom:15.0),
+          width:340,
+          child : Align(
+              alignment: Alignment.center,
+              child:Column(
+          children: <Widget>[
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 0),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 10),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 20),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 30),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 40),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 50),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 60),
+            RowKeyBoard(fu: fu, cardSet: cardSet, i0: 70),
+            RowKeyBoardLast(fu: fu, cardSet: cardSet, i0: 80, fuInitCard: fuInitCard,),
         ]
       )
+          )
     )
+
     ;
   }
 }
@@ -124,7 +118,7 @@ class RowKeyBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children:
           //_widget
           <Widget>[
@@ -141,4 +135,55 @@ class RowKeyBoard extends StatelessWidget {
         ]
     );
   }
+}
+
+class RowKeyBoardLast extends StatelessWidget {
+  const RowKeyBoardLast({super.key, required this.fu, required this.cardSet, required this.i0, required this.fuInitCard});
+  final Set<int> cardSet ;
+  final Function fu;
+  final Function fuInitCard;
+  final int i0;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children:
+        //_widget
+        <Widget>[
+          ((i0+1)<cardDeck.length) ? CardButton(cardDeckNumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
+          ((i0+2)<cardDeck.length) ? CardButton(cardDeckNumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
+          ((i0+3)<cardDeck.length) ? CardButton(cardDeckNumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
+          ((i0+4)<cardDeck.length) ? CardButton(cardDeckNumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
+          ((i0+5)<cardDeck.length) ? CardButton(cardDeckNumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
+          //((i0+6)<cardDeck.length) ? CardButton(cardDeckNumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)) : Container(),
+          //((i0+7)<cardDeck.length) ? CardButton(cardDeckNumber: i0+6, fu: fu,isPressed: cardSet.contains(cardDeck[i0+6].num)) : Container(),
+          //((i0+8)<cardDeck.length) ? CardButton(cardDeckNumber: i0+7, fu: fu,isPressed: cardSet.contains(cardDeck[i0+7].num)) : Container(),
+          //((i0+9)<cardDeck.length) ? CardButton(cardDeckNumber: i0+8, fu: fu,isPressed: cardSet.contains(cardDeck[i0+8].num)) : Container(),
+          //((i0+10)<cardDeck.length) ? CardButton(cardDeckNumber: i0+9, fu: fu,isPressed: cardSet.contains(cardDeck[i0+9].num)) : Container(),
+          Container(width:71),
+          ConstrainedBox(
+            constraints: const BoxConstraints.tightFor(width: 97, height: 30),
+            child: ElevatedButton(
+                  onPressed: () => fuInitCard(),
+                  style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8))
+                    ),
+                  child:const Text("clear")
+            ),
+          )
+        ]
+    );
+  }
+}
+
+String convCardSet (Set<int> cardSet) {
+  if (cardSet.isEmpty) return "";
+  String stringToCheck="";
+  List<int> toSort=List<int>.from(cardSet);
+  toSort.sort();
+  for(int i in toSort){
+    stringToCheck += "-${i.toString().padLeft(2, '0')}";
+  }
+  return stringToCheck.substring(1);
 }

@@ -1,81 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:secondflutter/const_cmp.dart';
 import 'package:secondflutter/gamecard.dart';
+import 'dart:math';
 
-class SuperResultBarList extends StatelessWidget {
-  const SuperResultBarList(
+class ResultBarView extends StatelessWidget {
+  const ResultBarView(
       {super.key,
-        required this.chainResList,
-        required this.nMax,
-        required this.isShort,
-        required this.fuTog});
-  final List<ChainResult> chainResList;
-  final int nMax;
-  final bool isShort;
-  final Function fuTog;
+        required this.chainResult,});
+  final List<ChainResult> chainResult;
   @override
   Widget build(BuildContext context) {
-    if (isShort) {
-      return ResultBarList(
-          chainResList: chainResList, nMax: 6, fuTog: fuTog);
+    if (chainResult.length<6) {
+      final List<Widget> _widget = List.generate(
+          chainResult.length,
+              (index) => ResultBar(chainResult: chainResult[index]));
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: _widget,
+      );
     }
-    return ResultBarListView(chainResList: chainResList, fuTog: fuTog);
-  }
-}
-
-class ResultBarList extends StatelessWidget {
-  const ResultBarList(
-      {super.key,
-        required this.chainResList,
-        required this.nMax,
-        required this.fuTog});
-  final List<ChainResult> chainResList;
-  final int nMax;
-  final Function fuTog;
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> _widget = List.generate(
-        (chainResList.length <= nMax) ? chainResList.length : nMax,
-            (index) => ResultBar(chainResult: chainResList[index]));
-    if (chainResList.length > nMax) {
-      _widget.add(GestureDetector(
-        onTap: () => fuTog(),
-        child:
-        Card(child: Text("   ${chainResList.length - nMax} more results   ")),
-      ) // gesture
-      ); //add widget
-    }
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: _widget,
-    );
-  }
-}
-
-class ResultBarListView extends StatelessWidget {
-  const ResultBarListView(
-      {super.key,
-        required this.chainResList,
-        required this.fuTog});
-  final List<ChainResult> chainResList;
-  final Function fuTog;
-  @override
-  Widget build(BuildContext context) {
-    return
-      //GestureDetector(onTap: null,
-      //  child:
-        Expanded(child:
-          ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(8),
-            itemCount: chainResList.length,
-            itemBuilder: (BuildContext context, int index) {
-              return GestureDetector(onTap:() => fuTog(),child:
-                ResultBar(chainResult: chainResList[index])
-              );
-            }) //listview
-        )
-      //)
+    return Expanded(
+        child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(8),
+          itemCount: chainResult.length,
+          itemBuilder: (BuildContext context, int index) {
+            return ResultBar(chainResult: chainResult[index]);
+          }) //listview
+      )
     ;
   }
 }
@@ -86,7 +39,8 @@ class ResultBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        margin: const EdgeInsets.only(left: 15.0, right: 15.0),
+        //margin: const EdgeInsets.only(left: 15.0, right: 15.0),
+        width:340,
         child: Card(
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -117,16 +71,80 @@ class ResultBar extends StatelessWidget {
   }
 }
 
-class StringDisplayCard extends StatelessWidget {
-  const StringDisplayCard(
-      {super.key, required this.theString, required this.isShortened});
-  final String theString;
-  final bool isShortened;
+
+class DisplaySubmitResultSummary extends StatelessWidget {
+  const DisplaySubmitResultSummary({super.key, required this.resultList, required this.fu});
+  final List<ChainResult> resultList ;
+  final Function fu;
   @override
   Widget build(BuildContext context) {
-    if (theString.isEmpty || isShortened) {
-      return Container();
+    String messageDisplay="";
+    if (fu()) {
+      messageDisplay=" ... searching ...";
+    } else {
+      if (resultList.isEmpty) {
+        messageDisplay=noSuchChain;
+      } else {
+        if (resultList.length==1){
+          messageDisplay="One solution";
+          if (resultList[0].getChallengeresult()!=existButNoPerf) {
+            messageDisplay+=": ${resultList[0].getChallengeresult()}";}
+        } else {
+          messageDisplay="${resultList.length} chains";}
+      }
     }
-    return Card(child: Text(theString));
+    return Center(child:
+    Card(
+        margin: const EdgeInsets.symmetric(horizontal: 20.0),
+        child:SizedBox(
+            width: 340,
+            height: 32,
+            child: Align(
+                alignment: Alignment.center,
+                child:Text(messageDisplay)
+            )
+        )
+    )
+    );
   }
 }
+
+class BottomDrawerWidget extends StatelessWidget {
+  const BottomDrawerWidget({super.key, required this.resultList, required this.isCollapsed, required this.fuToggle});
+  final List<ChainResult> resultList;
+  final bool isCollapsed;
+  final Function fuToggle;
+  @override
+  Widget build(BuildContext context) {
+    var numberOfResults=resultList.length;
+    if (numberOfResults==0) return Container();
+    double height =40+min(numberOfResults,6)*32+35;
+    double width=MediaQuery.of(context).size.width;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child : Container(
+      color: Colors.blue[700],
+      width: width,
+      height: height,
+      child:Padding(
+          padding: const EdgeInsets.symmetric(vertical:2),
+          child : Column(
+        children: <Widget>[
+          GestureDetector(
+            onTap: () {fuToggle();},
+            child: Icon(isCollapsed ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    size:20,
+                    color: Colors.white,
+          ),
+          ),
+          if (!isCollapsed) ResultBarView(chainResult: resultList),
+        ],
+      )
+      )
+    )
+    );
+  }
+}
+
+
+
