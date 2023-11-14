@@ -46,7 +46,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Set<int> _cardSet = {};
-  bool _isLogged = false;
+  bool _isLogged =true;
   bool _isCollapsed = true;
   List<ChainResult> _resultList = [];
   bool _requestSubmitDisplay=false;
@@ -105,7 +105,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     _initCardSet();
-    _updateHomePageState(99);
+    _setIsLogged();
+    //_isLogged = false;
+    //_updateHomePageState(99);
   }
 
   Future<void> _checkIn(String email, String pass) async {
@@ -133,6 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _checkCardSet() {
     String stringToCheck = convCardSet(_cardSet);
+    if (!_isLogged) return;
     _resultList = [];
     _requestSubmitDisplay=true;
     _chainSubmitted=true;
