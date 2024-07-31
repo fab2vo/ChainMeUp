@@ -64,15 +64,15 @@ class ChainResult {
     } else {return lowEmission;}
   }
   String affi() {
-    String _res="";
-    _res +=cost.toString().padRight(8," ");
-    _res +=ghg.toString().padRight(8," ");
-    _res +=H2O.toString().padRight(8," ");
-    _res +=land.toString().padRight(8," ");
-    _res +=protest.toString().padRight(8," ");
-    _res += getChallengeresult();
-    _res +="\n";
-    return _res;
+    String res="";
+    res +=cost.toString().padRight(8," ");
+    res +=ghg.toString().padRight(8," ");
+    res +=H2O.toString().padRight(8," ");
+    res +=land.toString().padRight(8," ");
+    res +=protest.toString().padRight(8," ");
+    res += getChallengeresult();
+    res +="\n";
+    return res;
   }
   bool testEqual(ChainResult x){
     return (x.chainId==chainId)&&(x.cost==cost)&&(x.ghg==ghg)&&(x.H2O==H2O)&&(x.land==land)&&(x.protest==protest);

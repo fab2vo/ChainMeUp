@@ -11,12 +11,12 @@ class ResultBarView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (chainResult.length<6) {
-      final List<Widget> _widget = List.generate(
+      final List<Widget> widget = List.generate(
           chainResult.length,
               (index) => ResultBar(chainResult: chainResult[index]));
       return Column(
         mainAxisAlignment: MainAxisAlignment.start,
-        children: _widget,
+        children: widget,
       );
     }
     return Expanded(
@@ -38,7 +38,7 @@ class ResultBar extends StatelessWidget {
   final ChainResult chainResult;
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
         //margin: const EdgeInsets.only(left: 15.0, right: 15.0),
         width:340,
         child: Card(
