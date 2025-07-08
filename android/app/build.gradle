@@ -24,11 +24,26 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def flutterCompileSdkVersionString = localProperties.getProperty('flutter.compileSdkVersion')
+def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion')?.toInteger()
+def flutterTargetSdkVersion = localProperties.getProperty('flutter.targetSdkVersion')?.toInteger()
+if (flutterCompileSdkVersionString == null) {
+    println("Warning: 'flutter.compileSdkVersion' not found or invalid in local.properties. Defaulting to '35'.")
+    flutterCompileSdkVersionString = "35" // Default to string
+}
+if (flutterMinSdkVersion == null) {
+    println("Warning: 'flutter.minSdkVersion' not found or invalid in local.properties. Defaulting to 21.")
+    flutterMinSdkVersion = 21
+}
+if (flutterTargetSdkVersion == null) {
+    println("Warning: 'flutter.targetSdkVersion' not found or invalid in local.properties. Defaulting to 35.")
+    flutterTargetSdkVersion = 35
+}
 android {
     namespace "com.fdx.secondflutter"
     //manifestPlaceholders = [applicationName: "android.app.seconflutter"]
-    compileSdkVersion flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    compileSdkVersion "android-${flutterCompileSdkVersionString}"
+    ndkVersion "26.1.10909125"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -48,8 +63,8 @@ android {
         applicationId "com.fdx.secondflutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        minSdkVersion flutterMinSdkVersion
+        targetSdkVersion flutterTargetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
