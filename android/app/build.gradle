@@ -6,6 +6,20 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+// --- SECTION A: Import and Load key.properties ---
+// This part goes at the very top of your android/app/build.gradle file,
+// before the 'android { ... }' block.
+import java.io.FileInputStream // This line ensures you can read files
+
+
+// This is the core part that reads your key.properties file.
+// It checks if key.properties exists and then loads its content into 'keystoreProperties'.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties') // Looks for key.properties in the 'android' folder
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -70,11 +84,23 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties.getProperty('storeFile'))      // Path to your .jks file
+            storePassword keystoreProperties.getProperty('storePassword')    // Password for the .jks file
+            keyAlias keystoreProperties.getProperty('keyAlias')              // Alias of the key within the .jks file
+            keyPassword keystoreProperties.getProperty('keyPassword')        // Password for the specific key alias
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            //signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
         }
     }
 }
