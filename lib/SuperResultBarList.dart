@@ -118,7 +118,7 @@ class BottomDrawerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var numberOfResults=resultList.length;
     if (numberOfResults==0) return Container();
-    double height =40+min(numberOfResults,6)*32+35;
+    double height =60+min(numberOfResults,6)*32+55; //40 +min()*32+35
     double width=MediaQuery.of(context).size.width;
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
