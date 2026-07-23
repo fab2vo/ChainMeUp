@@ -43,7 +43,7 @@ def flutterMinSdkVersion = localProperties.getProperty('flutter.minSdkVersion')?
 def flutterTargetSdkVersion = localProperties.getProperty('flutter.targetSdkVersion')?.toInteger()
 if (flutterCompileSdkVersionString == null) {
     println("Warning: 'flutter.compileSdkVersion' not found or invalid in local.properties. Defaulting to '35'.")
-    flutterCompileSdkVersionString = "35" // Default to string
+    flutterCompileSdkVersionString = "36" // Default to string
 }
 if (flutterMinSdkVersion == null) {
     println("Warning: 'flutter.minSdkVersion' not found or invalid in local.properties. Defaulting to 21.")
@@ -51,12 +51,13 @@ if (flutterMinSdkVersion == null) {
 }
 if (flutterTargetSdkVersion == null) {
     println("Warning: 'flutter.targetSdkVersion' not found or invalid in local.properties. Defaulting to 35.")
-    flutterTargetSdkVersion = 35
+    flutterTargetSdkVersion = 36
 }
 android {
     namespace "com.fdx.secondflutter"
     //manifestPlaceholders = [applicationName: "android.app.seconflutter"]
-    compileSdkVersion "android-${flutterCompileSdkVersionString}"
+    //compileSdkVersion "android-${flutterCompileSdkVersionString}"
+    compileSdkVersion flutterCompileSdkVersionString.toInteger()
     ndkVersion "26.1.10909125"
 
     compileOptions {
