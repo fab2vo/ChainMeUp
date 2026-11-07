@@ -11,6 +11,7 @@ import 'package:secondflutter/SuperResultBarList.dart';
 import 'package:secondflutter/gamecard.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
+import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +47,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Set<int> _cardSet = {};
-  bool _isLogged =true;
+  // real state known at startup; kept up to date by _authSubscription
+  bool _isLogged = FirebaseAuth.instance.currentUser != null;
+  StreamSubscription<User?>? _authSubscription;
   bool _isCollapsed = true;
   List<ChainResult> _resultList = [];
   bool _requestSubmitDisplay=false;
@@ -54,8 +57,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    _setIsLogged();
     super.initState();
+    // single listener for the whole life of the page, cancelled in dispose()
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (!mounted) return;
+      setState(() {
+        _isLogged = (user != null);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   void _updateHomePageState(int num) {
@@ -91,23 +106,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return _chainSubmitted;
   }
 
-  Future<void> _setIsLogged() async {
-    FirebaseAuth.instance.userChanges().listen((User? user) {
-      if (user == null) {
-        _isLogged = false;
-      } else {
-        _isLogged = true;
-      }
-    });
-    _updateHomePageState(99);
-  }
-
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await FirebaseAuth.instance.signOut(); // _authSubscription updates _isLogged
     _initCardSet();
-    _setIsLogged();
-    //_isLogged = false;
-    //_updateHomePageState(99);
   }
 
   Future<void> _checkIn(String email, String pass) async {
@@ -118,19 +119,32 @@ class _MyHomePageState extends State<MyHomePage> {
           password: pass
       );
     } on FirebaseAuthException catch(e) {
-      messAge="";
-      // error codes don't work e.code and e.message
-      if (e.code == 'network-request-failed') messAge="Network request failed";
-      if (e.code == 'wrong-password') messAge="Wrong password";
-      if (e.code == 'user-not-found') messAge="User not found";
+      // Recent Firebase versions return 'invalid-credential' instead of
+      // 'wrong-password' / 'user-not-found' (email enumeration protection)
+      switch (e.code) {
+        case 'invalid-credential':
+        case 'wrong-password':
+        case 'user-not-found':
+          messAge = "Wrong email or password";
+        case 'invalid-email':
+          messAge = "Invalid email address";
+        case 'network-request-failed':
+          messAge = "Network request failed";
+        case 'too-many-requests':
+          messAge = "Too many attempts, try again later";
+        case 'user-disabled':
+          messAge = "Account disabled";
+        default:
+          messAge = e.code;
+      }
+      if (!mounted) return;
       SnackBar sb = SnackBar(
         content: Text("Failed to connect and log ($messAge)"),
         duration: const Duration(seconds: 5),
       );
-      //ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(sb);
     }
-    _setIsLogged();
+    // on success, _authSubscription updates _isLogged
   }
 
   void _checkCardSet() {
@@ -153,12 +167,14 @@ class _MyHomePageState extends State<MyHomePage> {
           (querySnapshot) {
         if (querySnapshot.docs.isNotEmpty) {
           for (var docSnapshot in querySnapshot.docs) {
+            final data = docSnapshot.data();
+            // Firestore returns whole numbers (e.g. GHG = 0) as int, so read them as num
             _resultList.add(
-                ChainResult(sToCheck, docSnapshot.data()["Cost"] as double,
-                     docSnapshot.data()["GHG"] as double,
-                    docSnapshot.data()["H2O"] as double,
-                    docSnapshot.data()["Land"] as double,
-                   docSnapshot.data()["Protest"] as double));
+                ChainResult(sToCheck, (data["Cost"] as num).toDouble(),
+                    (data["GHG"] as num).toDouble(),
+                    (data["H2O"] as num).toDouble(),
+                    (data["Land"] as num).toDouble(),
+                    (data["Protest"] as num).toDouble()));
           }
           _resultList = removeDuplicates(_resultList);
         }
@@ -168,7 +184,20 @@ class _MyHomePageState extends State<MyHomePage> {
         _updateHomePageState(99);
       },
       //onError: (e) => print("Error completing: $e"),
-    );
+    ).catchError((e) {
+      // without this, a failed read (network, access rights, bad data) leaves
+      // " ... searching ..." on screen forever
+      debugPrint("Error reading chain $sToCheck: $e");
+      _resultList = [];
+      _requestSubmitDisplay = false; // don't claim "No chain" when the read failed
+      _chainSubmitted = false;
+      _updateHomePageState(99);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Could not read the chains (network or access problem). Please try again."),
+        duration: Duration(seconds: 5),
+      ));
+    });
   }
 
   @override
@@ -186,7 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if (_isLogged) {
               _signOut();
             } else {
-              await showDialog<String>(context: context,
+              final bool? loginPressed = await showDialog<bool>(context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
                     content: const Text('Please enter you credentials'),
@@ -201,6 +230,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       TextField(
                           onChanged: (String val) => varPass = val,
                           //controller: _emailController,
+                          obscureText: true,
+                          enableSuggestions: false,
+                          autocorrect: false,
                           decoration: const InputDecoration(
                             labelText: 'Password',
                             hintText: 'ABC123',
@@ -208,12 +240,14 @@ class _MyHomePageState extends State<MyHomePage> {
                           )),
                       TextButton(
                           child: const Text('Login'),
-                          onPressed: () => Navigator.pop(context, "")
+                          onPressed: () => Navigator.pop(context, true)
                       ), //text button
                     ],
                   ); //alertdialog
                 }, // builder
               ); // ShowDialog
+              // dialog closed without pressing Login (tap outside / back): do nothing
+              if (loginPressed != true || !mounted) return;
               _checkIn(varEmail, varPass);
             }
           }, //async button log

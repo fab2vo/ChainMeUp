@@ -13,10 +13,10 @@ final cardDeck=[ GameCard(02,colH2H2),GameCard(03,colH2H2),GameCard(04,colH2H2),
                  GameCard(32,colElec),GameCard(33,colElec),GameCard(36,colElec),GameCard(37,colElec),GameCard(38,colElec),GameCard(39,colComc),GameCard(40,colComc),GameCard(41,colComc),GameCard(42,colComc),
                  GameCard(43,colComc),GameCard(44,colComc),GameCard(45,colComc),GameCard(46,colComc),GameCard(47,colComc),GameCard(48,colComc),GameCard(49,colComc),GameCard(50,colComc),GameCard(51,colComc),
                  GameCard(52,colComc),GameCard(53,colComc),GameCard(54,colComc),GameCard(55,colComc),GameCard(56,colComc),GameCard(57,colTran),GameCard(58,colTran),GameCard(59,colTran),GameCard(60,colTran),
-                 GameCard(61,colTran),GameCard(62,colTran),GameCard(63,colTran),GameCard(64,colTran),GameCard(65,colTran),GameCard(66,colTran),GameCard(67,colTran),GameCard(68,colTran),GameCard(70,colTran),
+                 GameCard(61,colTran),GameCard(62,colTran),GameCard(63,colTran),GameCard(64,colTran),GameCard(65,colTran),GameCard(66,colTran),GameCard(67,colTran),GameCard(68,colTran),GameCard(69,colTran),GameCard(70,colTran),
                  GameCard(71,colTran),GameCard(72,colTran),GameCard(73,colTran),GameCard(74,colTran),GameCard(75,colTran),GameCard(76,colTran),GameCard(77,colStor),GameCard(78,colStor),GameCard(79,colStor),
                  GameCard(80,colStor),GameCard(81,colStor),GameCard(82,colStor),GameCard(83,colStor),GameCard(84,colStor),GameCard(85,colStor),GameCard(86,colStor),GameCard(87,colHeat),GameCard(88,colHeat),
-                 GameCard(89,colHeat),GameCard(90,colHeat),GameCard(91,colHeat),GameCard(92,colHeat),GameCard(93,colHeat),
+                 GameCard(89,colHeat),GameCard(90,colHeat),GameCard(93,colHeat),
 ];
 const String noSuchChain="No chain for this card set";
 const String existButNoPerf="";

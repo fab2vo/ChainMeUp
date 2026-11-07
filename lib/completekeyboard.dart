@@ -122,16 +122,16 @@ class RowKeyBoard extends StatelessWidget {
         children:
           //_widget
           <Widget>[
-            ((i0+1)<cardDeck.length) ? CardButton(cardDeckNumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
-            ((i0+2)<cardDeck.length) ? CardButton(cardDeckNumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
-            ((i0+3)<cardDeck.length) ? CardButton(cardDeckNumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
-            ((i0+4)<cardDeck.length) ? CardButton(cardDeckNumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
-            ((i0+5)<cardDeck.length) ? CardButton(cardDeckNumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
-            ((i0+6)<cardDeck.length) ? CardButton(cardDeckNumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)) : Container(),
-            ((i0+7)<cardDeck.length) ? CardButton(cardDeckNumber: i0+6, fu: fu,isPressed: cardSet.contains(cardDeck[i0+6].num)) : Container(),
-            ((i0+8)<cardDeck.length) ? CardButton(cardDeckNumber: i0+7, fu: fu,isPressed: cardSet.contains(cardDeck[i0+7].num)) : Container(),
-            ((i0+9)<cardDeck.length) ? CardButton(cardDeckNumber: i0+8, fu: fu,isPressed: cardSet.contains(cardDeck[i0+8].num)) : Container(),
-            ((i0+10)<cardDeck.length) ? CardButton(cardDeckNumber: i0+9, fu: fu,isPressed: cardSet.contains(cardDeck[i0+9].num)) : Container(),
+            ((i0+1)<=cardDeck.length) ? CardButton(cardDeckNumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
+            ((i0+2)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
+            ((i0+3)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
+            ((i0+4)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
+            ((i0+5)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
+            ((i0+6)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)) : Container(),
+            ((i0+7)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+6, fu: fu,isPressed: cardSet.contains(cardDeck[i0+6].num)) : Container(),
+            ((i0+8)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+7, fu: fu,isPressed: cardSet.contains(cardDeck[i0+7].num)) : Container(),
+            ((i0+9)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+8, fu: fu,isPressed: cardSet.contains(cardDeck[i0+8].num)) : Container(),
+            ((i0+10)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+9, fu: fu,isPressed: cardSet.contains(cardDeck[i0+9].num)) : Container(),
         ]
     );
   }
@@ -150,11 +150,11 @@ class RowKeyBoardLast extends StatelessWidget {
         children:
         //_widget
         <Widget>[
-          ((i0+1)<cardDeck.length) ? CardButton(cardDeckNumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
-          ((i0+2)<cardDeck.length) ? CardButton(cardDeckNumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
-          ((i0+3)<cardDeck.length) ? CardButton(cardDeckNumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
-          ((i0+4)<cardDeck.length) ? CardButton(cardDeckNumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
-          ((i0+5)<cardDeck.length) ? CardButton(cardDeckNumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
+          ((i0+1)<=cardDeck.length) ? CardButton(cardDeckNumber: i0, fu: fu,isPressed: cardSet.contains(cardDeck[i0].num)) : Container(),
+          ((i0+2)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+1, fu: fu,isPressed: cardSet.contains(cardDeck[i0+1].num)) : Container(),
+          ((i0+3)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+2, fu: fu,isPressed: cardSet.contains(cardDeck[i0+2].num)) : Container(),
+          ((i0+4)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+3, fu: fu,isPressed: cardSet.contains(cardDeck[i0+3].num)) : Container(),
+          ((i0+5)<=cardDeck.length) ? CardButton(cardDeckNumber: i0+4, fu: fu,isPressed: cardSet.contains(cardDeck[i0+4].num)) : Container(),
           //((i0+6)<cardDeck.length) ? CardButton(cardDeckNumber: i0+5, fu: fu,isPressed: cardSet.contains(cardDeck[i0+5].num)) : Container(),
           //((i0+7)<cardDeck.length) ? CardButton(cardDeckNumber: i0+6, fu: fu,isPressed: cardSet.contains(cardDeck[i0+6].num)) : Container(),
           //((i0+8)<cardDeck.length) ? CardButton(cardDeckNumber: i0+7, fu: fu,isPressed: cardSet.contains(cardDeck[i0+7].num)) : Container(),

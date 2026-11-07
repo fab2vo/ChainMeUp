@@ -39,8 +39,8 @@ class ChainResult {
   }
 
   String quickFormat(double dd){
-    String st=dd.round().toString().padRight(1);
-    return st.padLeft(4-st.length," ");
+    // right-align on 4 characters (padLeft takes the total width)
+    return dd.round().toString().padLeft(4);
   }
 
   bool isMassive(){
